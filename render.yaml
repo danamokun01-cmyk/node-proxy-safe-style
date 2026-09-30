@@ -14,18 +14,12 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false # Renderのダッシュボードで入力(Gitに入れない)
       - key: TRUSTED_PROXY_HOPS
         value: 1
       - key: LOG_DIR
-        value: /tmp/logs
+        value: /tmp/logs # 再起動で消える。ログは標準出力(Renderの Logs)にも出る
       - key: RATE_LIMIT_MAX
         value: 300
-      - key: SOURCE_URL
-        sync: false
       - key: BLOCKED_HOSTS
         sync: false
       - key: UI_HOST
@@ -41,18 +35,12 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false # Renderのダッシュボードで入力(Gitに入れない)
       - key: TRUSTED_PROXY_HOPS
         value: 1
       - key: LOG_DIR
-        value: /tmp/logs
+        value: /tmp/logs # 再起動で消える。ログは標準出力(Renderの Logs)にも出る
       - key: RATE_LIMIT_MAX
         value: 300
-      - key: SOURCE_URL
-        sync: false
       - key: BLOCKED_HOSTS
         sync: false
       - key: UI_HOST

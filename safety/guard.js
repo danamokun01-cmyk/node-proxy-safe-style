@@ -53,15 +53,40 @@ function createRateLimit({ windowMs, max }) {
 }
 
 // ---- メソッド制限 + 拡張子によるダウンロード遮断 ----
-const BLOCKED_EXT = new Set(
+// 実行ファイル・インストーラ等は常に遮断(悪意あるファイルの配布元としてドメインが警告対象になるのを防ぐ)。
+// 書類・圧縮・画像・音声・動画などは ALLOW_DOWNLOADS=0 のときだけ遮断(既定は許可)。
+const ALWAYS_BLOCKED_EXT = new Set(
   (
-    "zip rar 7z tar gz tgz bz2 xz lzh cab iso img dmg pkg deb rpm apk ipa " +
-    "exe msi bat cmd com scr ps1 sh jar dll so bin " +
-    "pdf doc docx xls xlsx ppt pptx odt ods odp rtf epub " +
-    "mp4 m4v mkv avi mov wmv flv webm mpg mpeg mp3 wav flac aac ogg m4a " +
-    "torrent swf"
+    "exe msi bat cmd scr ps1 sh jar dll so bin apk ipa dmg pkg deb rpm swf vbs lnk hta appx msix torrent"
   ).split(" ")
 );
+const DOWNLOAD_EXT = (
+  "zip rar 7z tar gz tgz bz2 xz lzh cab iso img " +
+  "pdf doc docx xls xlsx ppt pptx odt ods odp rtf epub " +
+  "mp4 m4v mkv avi mov wmv flv webm mpg mpeg mp3 wav flac aac ogg m4a"
+).split(" ");
+const ALLOW_DOWNLOADS = process.env.ALLOW_DOWNLOADS !== "0";
+const BLOCKED_EXT = new Set([...ALWAYS_BLOCKED_EXT, ...(ALLOW_DOWNLOADS ? [] : DOWNLOAD_EXT)]);
+
+// 「.com」「.sh」「.so」「.zip」「.mov」はドメイン(TLD)でもあるため、URLの「ホスト部分」は拡張子として見ない。
+// 例: /proxy/https://example.com (末尾スラッシュなし) をファイル形式 .com と誤判定して遮断してしまう。
+function targetPathname(reqPath, prefix) {
+  let rest = reqPath.startsWith(prefix) ? reqPath.slice(prefix.length) : reqPath;
+  rest = rest.replace(/^https?:\/\//i, "");
+  const i = rest.indexOf("/");
+  return i === -1 ? "" : rest.slice(i);
+}
+
+function extensionOf(pathname) {
+  let p = pathname;
+  try {
+    p = decodeURIComponent(p);
+  } catch (e) {
+    /* そのまま使う */
+  }
+  const m = p.toLowerCase().match(/\.([a-z0-9]+)$/);
+  return m ? m[1] : "";
+}
 
 function methodAndExtension(req, res, next) {
   if (req.method !== "GET" && req.method !== "HEAD") {
@@ -69,18 +94,21 @@ function methodAndExtension(req, res, next) {
     res.set("Allow", "GET, HEAD");
     return res.status(405).type("text/plain; charset=utf-8").send("このサービスでは閲覧(GET/HEAD)のみ利用できます。");
   }
-  let p = req.path;
-  try {
-    p = decodeURIComponent(p);
-  } catch (e) {
-    /* そのまま使う */
-  }
-  const m = p.toLowerCase().match(/\.([a-z0-9]+)$/);
-  if (m && BLOCKED_EXT.has(m[1])) {
+  const ext = extensionOf(targetPathname(req.path, "/proxy/"));
+  if (ext && BLOCKED_EXT.has(ext)) {
     res.locals.blockedReason = "blocked_extension";
     return res.status(403).type("text/plain; charset=utf-8").send("このファイル形式は取得できません。");
   }
   next();
 }
 
-module.exports = { getClientIp, createRateLimit, methodAndExtension, BLOCKED_EXT };
+module.exports = {
+  getClientIp,
+  createRateLimit,
+  methodAndExtension,
+  BLOCKED_EXT,
+  ALWAYS_BLOCKED_EXT,
+  ALLOW_DOWNLOADS,
+  targetPathname,
+  extensionOf,
+};

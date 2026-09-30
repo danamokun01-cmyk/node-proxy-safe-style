@@ -3,8 +3,8 @@
 | 対策 | 場所 |
 |---|---|
 | アクセスログ(Supabase + ローカル日次JSONL、gzip、自動削除) | safety/logger.js, supabase/schema.sql |
-| GET/HEADのみ許可、バイナリ拡張子の遮断 | safety/guard.js (methodAndExtension) |
-| Content-Type許可リスト / attachment遮断 / サイズ上限 | safety/content-filter.js |
+| GET/HEADのみ許可、実行ファイル系の拡張子は常に遮断(書類・圧縮・動画等は ALLOW_DOWNLOADS=0 で遮断) | safety/guard.js (methodAndExtension) |
+| 実行ファイル系Content-Typeの遮断(厳格モードは許可リスト+attachment遮断) / サイズ上限(既定50MB) | safety/content-filter.js |
 | IP単位レートリミット | safety/guard.js (createRateLimit) |
 | 内部IP・localhost・メタデータIP遮断(DNS解決後も検査) | safety/ssrf.js |
 | WebSocket中継なし | server.js (onUpgrade未登録) |
@@ -13,6 +13,11 @@
 | 通報・遮断依頼サイトのブロック(BLOCKED_HOSTS) | safety/policy.js (createHostBlocklist) |
 | セキュリティヘッダ / プロキシ経路のnoindex / robots.txt | safety/policy.js, public/robots.txt |
 | AGPL-3.0のソース提供リンク(/source → SOURCE_URL) | server.js |
+
+## Supabaseなしで動かす
+`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` を設定しなければ、ログは「ローカルの日次ファイル」と「標準出力([access] 行。Renderの Logs 画面で見える)」に出る。
+ただしRenderのディスクは再起動・再デプロイで消え、Logs画面の保存期間も限られる。不正利用の調査に使うログを長く残したい場合は、後からSupabaseを設定する。
+`npm run archive-logs` と `supabase/schema.sql` はSupabaseを使う場合だけ必要。
 
 ## セットアップ
 1. `npm install`

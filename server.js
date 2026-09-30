@@ -60,10 +60,8 @@ app.use(securityHeaders(PREFIX));
 app.get("/healthz", (req, res) => res.send("ok"));
 
 // AGPL-3.0 第13条: ネットワーク越しに利用する全ての人へ、改変版のソースコードを提供する
-if (!process.env.SOURCE_URL) console.warn("[license] SOURCE_URL未設定: AGPL-3.0のソース提供リンク(/source)が機能しません");
-app.get("/source", (req, res) =>
-  process.env.SOURCE_URL ? res.redirect(302, process.env.SOURCE_URL) : res.status(404).type("text/plain").send("not configured")
-);
+const SOURCE_URL = process.env.SOURCE_URL || "https://github.com/danamokun01-cmyk/node-proxy-safe-style";
+app.get("/source", (req, res) => res.redirect(302, SOURCE_URL));
 
 // 広告付きの枠ページ(閲覧先はiframeで表示)
 const viewTemplate = fs.readFileSync(path.join(__dirname, "views", "view.html"), "utf8");

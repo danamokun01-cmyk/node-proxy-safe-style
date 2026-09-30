@@ -29,7 +29,7 @@ function createLogger(opts = {}) {
   // 推奨: secret / service_role キー。anon(publishable)キーの場合は schema.sql の「INSERT専用ポリシー」が必要
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
   const sb = url && key && createClient ? createClient(url, key, { auth: { persistSession: false } }) : null;
-  if (!sb) console.warn("[logger] Supabase未設定: ローカルファイルのみに記録します");
+  if (!sb) console.warn("[logger] Supabase未設定: ローカルファイルと標準出力(Renderのログ画面)に記録します");
 
   fs.mkdirSync(dir, { recursive: true });
 
@@ -92,9 +92,13 @@ function createLogger(opts = {}) {
   }
   if (sb) setInterval(flush, flushMs).unref();
 
+  // Supabase未設定のときは標準出力にも1行出す(Renderの Logs 画面で見られる。ローカルファイルは再起動で消えるため)。LOG_STDOUT=0 で無効
+  const toStdout = process.env.LOG_STDOUT ? process.env.LOG_STDOUT === "1" : !sb;
+
   function log(row) {
     row.created_at = new Date().toISOString();
     writeLocal(row);
+    if (toStdout) console.log("[access] " + JSON.stringify(row));
     if (sb) {
       buf.push(row);
       if (buf.length >= batchMax) flush();
