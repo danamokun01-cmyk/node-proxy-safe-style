@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Webページ表示サービス</title>
+<style>
+  body { font-family: system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif; margin: 0; padding: 0 16px; line-height: 1.7; color: #222; }
+  .layout { display: flex; gap: 28px; max-width: 1080px; margin: 6vh auto; }
+  .main { flex: 1; min-width: 0; max-width: 728px; }
+  .rail { width: 300px; flex: none; }
+  form { display: flex; gap: 8px; margin: 16px 0 8px; }
+  input[type=text] { flex: 1; padding: 10px; font-size: 16px; }
+  button { padding: 10px 18px; font-size: 16px; }
+  button:disabled { opacity: .5; }
+  .notice { font-size: 13px; background: #f5f5f5; padding: 12px 14px; border-radius: 6px; }
+  label { font-size: 14px; }
+  footer { font-size: 13px; margin-top: 8px; }
+  /* 広告枠: ボタンの近くに置かない(誤クリック誘導と見なされる)ため十分な余白を取る */
+  .ad { text-align: center; margin: 40px 0; overflow: hidden; }
+  .ad::before { content: "広告"; display: block; font-size: 11px; color: #888; margin-bottom: 4px; }
+  .ad-sp { display: none; }
+  @media (max-width: 899px) {
+    .layout { display: block; margin: 4vh auto; }
+    .rail, .ad-pc { display: none; }
+    .ad-sp { display: block; }
+    body { padding-bottom: 70px; } /* スマホのオーバーレイ広告(画面下固定)に隠れないように */
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="main">
+    <h1>Webページ表示サービス</h1>
+    <p>閲覧したいページのURLを入力してください。閲覧専用です(書き込み・ファイルのダウンロードはできません)。</p>
+    <form id="f">
+      <input type="text" id="u" placeholder="https://example.com/" autocomplete="off" required>
+      <button id="b" disabled>表示</button>
+    </form>
+    <label><input type="checkbox" id="agree"> <a href="/terms.html" target="_blank">利用規約</a>に同意します</label>
+    <p class="notice">
+      本サービスの利用によって生じたいかなる損害についても、運営者は責任を負いません。
+      違法行為・サイバー攻撃への利用、および各組織(学校・職場等)のセキュリティポリシーを回避する目的での利用は禁止です。
+      閲覧先ページの著作権は各権利者に帰属します。
+      接続元IPアドレス・アクセス日時・閲覧先URL・ユーザーエージェントを記録しています(詳しくは<a href="/privacy.html">プライバシーポリシー</a>)。
+    </p>
+
+    <!-- PC①: 728x90 (PCのみ) -->
+    <div class="ad ad-pc" id="ad-pc-1"><!-- 忍者AdMax PC用タグ(728x90)を貼る。下の書き方推奨 --></div>
+
+    <!-- スマホ①: インライン 300x250 (スマホのみ) -->
+    <div class="ad ad-sp" id="ad-sp-1"><!-- 忍者AdMax スマホ用インラインタグ(300x250) --></div>
+
+    <!-- スマホ②: インライン 320x100 (スマホのみ・ページ最下部) -->
+    <div class="ad ad-sp" id="ad-sp-2"><!-- 忍者AdMax スマホ用インラインタグ(320x100) --></div>
+
+    <footer>
+      <a href="/terms.html">利用規約</a> ／ <a href="/privacy.html">プライバシーポリシー</a> ／
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSfQy4h2CYN1dT3gP4mGDC_vPujC-qxKTBRb_Cv5XCmW5bnkYg/viewform?usp=header" target="_blank" rel="noopener">お問い合わせ・不正利用・権利侵害の通報</a> ／
+      <a href="/source">ソースコード(AGPL-3.0)</a>
+    </footer>
+  </div>
+
+  <!-- PC右カラム: ②300x250 ③300x600(または300x250) -->
+  <aside class="rail">
+    <div class="ad ad-pc" id="ad-pc-2"><!-- 忍者AdMax PC用タグ(300x250) --></div>
+    <div class="ad ad-pc" id="ad-pc-3"><!-- 忍者AdMax PC用タグ(300x600) --></div>
+  </aside>
+</div>
+
+<!--
+  【広告タグの貼り方】
+  ・スマホ用タグは、UAがスマホと判定されない環境(PC)では広告が出ないため、そのまま貼ってよい。
+  ・PC用タグは、CSSで隠すだけだとスマホでも読み込まれる場合がある。次のように端末判定してから書き出すと安全:
+      <script>
+        if (window.innerWidth >= 900) {
+          document.write('ここに忍者AdMaxのタグ全体(</script> は <\/script> と書く)');
+        }
+      </script>
+  ・1ページの広告タグ合計は3つまで(スマホのオーバーレイ広告も1つに数える)。多いと正常に表示されないことがある。
+  ・スマホのオーバーレイ広告(画面下固定)は、広告枠の設定で「オーバーレイ広告」をONにして発行する。
+-->
+
+<script>
+  var agree = document.getElementById("agree"), b = document.getElementById("b"), input = document.getElementById("u");
+  // 同意なしで /proxy/ に直接来た人は、URLを入力欄に入れた状態でここに戻される
+  var pre = new URLSearchParams(location.search).get("u");
+  if (pre) input.value = pre;
+  agree.addEventListener("change", function () { b.disabled = !agree.checked; });
+  document.getElementById("f").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!agree.checked) return;
+    var v = input.value.trim();
+    if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+    location.href = "/view?u=" + encodeURIComponent(v); // 広告付きの枠ページ(閲覧先はiframe)へ
+  });
+</script>
+</body>
+</html>

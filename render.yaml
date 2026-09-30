@@ -1,0 +1,61 @@
+# 同じコードを2つのサービスとしてデプロイする(独自ドメイン不要)。
+#   wv-ui   : トップ・規約・広告付き枠ページ
+#   wv-proxy: 閲覧先の中継(閲覧先のJSはこちらのオリジンで動く)
+# UI_HOST / PROXY_HOST は「2つのサービスの両方に同じ値」を入れる(例 wv-ui.onrender.com / wv-proxy.onrender.com)。
+# サービス名が使用済みだとホスト名に文字列が付くので、作成後にダッシュボードで実際のURLを確認して入れる。
+# 同じ値を2回入力するのが面倒なら、ダッシュボードの Environment Group に共通の値を入れて両方に紐づける。
+services:
+  - type: web
+    name: wv-ui
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false # Renderのダッシュボードで入力(Gitに入れない)
+      - key: TRUSTED_PROXY_HOPS
+        value: 1
+      - key: LOG_DIR
+        value: /tmp/logs
+      - key: RATE_LIMIT_MAX
+        value: 300
+      - key: SOURCE_URL
+        sync: false
+      - key: BLOCKED_HOSTS
+        sync: false
+      - key: UI_HOST
+        sync: false
+      - key: PROXY_HOST
+        sync: false
+  - type: web
+    name: wv-proxy
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false # Renderのダッシュボードで入力(Gitに入れない)
+      - key: TRUSTED_PROXY_HOPS
+        value: 1
+      - key: LOG_DIR
+        value: /tmp/logs
+      - key: RATE_LIMIT_MAX
+        value: 300
+      - key: SOURCE_URL
+        sync: false
+      - key: BLOCKED_HOSTS
+        sync: false
+      - key: UI_HOST
+        sync: false
+      - key: PROXY_HOST
+        sync: false

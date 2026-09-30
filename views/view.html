@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>閲覧中 - Webページ表示サービス</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body { display: flex; flex-direction: column; height: 100dvh; font-family: system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif; color: #222; }
+  .bar { flex: none; display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #ddd; font-size: 13px; }
+  .bar .url { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #666; }
+  .bar a { white-space: nowrap; }
+  /* 広告は閲覧画面の「外側」だけ。閲覧先ページの中には入れない */
+  .ad { flex: none; text-align: center; overflow: hidden; margin: 6px 0; }
+  .ad::before { content: "広告"; display: block; font-size: 10px; color: #888; }
+  .ad-sp { display: none; }
+  iframe { flex: 1; min-height: 0; width: 100%; border: 0; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; }
+  @media (max-width: 899px) {
+    .ad-pc { display: none; }
+    .ad-sp { display: block; }
+    body { padding-bottom: 56px; } /* スマホのオーバーレイ広告(画面下固定)に隠れないように */
+  }
+</style>
+</head>
+<body>
+<div class="bar">
+  <a href="/">← トップへ</a>
+  <span class="url" title="{{URL}}">{{URL}}</span>
+  <a href="/terms.html" target="_blank" rel="noopener">規約</a>
+</div>
+
+<!-- PC上: 728x90 -->
+<div class="ad ad-pc" id="v-pc-1"><!-- 忍者AdMax PC用タグ(728x90) --></div>
+<!-- スマホ上: インライン 320x100 -->
+<div class="ad ad-sp" id="v-sp-1"><!-- 忍者AdMax スマホ用インラインタグ(320x100) --></div>
+
+<!-- sandbox: 閲覧先ページがこの枠(親ページ)を遷移させたり書き換えたりできないようにする。allow-top-navigation は付けない -->
+<iframe id="page" src="{{SRC}}" title="閲覧中のページ"
+  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+  referrerpolicy="origin"></iframe>
+
+<!-- PC下: 728x90 -->
+<div class="ad ad-pc" id="v-pc-2"><!-- 忍者AdMax PC用タグ(728x90) --></div>
+<!-- スマホ下: 忍者AdMaxの「オーバーレイ広告」を有効にしたタグを発行して、このコメントの位置に貼る -->
+<div class="ad-sp" id="v-sp-2"></div>
+
+<!-- 広告タグの貼り方は public/index.html 末尾のコメントと同じ(タグ合計3つまで) -->
+</body>
+</html>
